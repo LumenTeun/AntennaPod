@@ -24,7 +24,6 @@ import de.danoeh.antennapod.core.util.LangUtils;
  */
 public class OpmlExportWorker extends AsyncTask<Void, Void, Void> {
     private static final String TAG = "OpmlExportWorker";
-    private static final String DEFAULT_OUTPUT_NAME = "antennapod-feeds.opml";
     public static final String EXPORT_DIR = "export/";
 
     private Context context;
@@ -48,7 +47,7 @@ public class OpmlExportWorker extends AsyncTask<Void, Void, Void> {
         if (output == null) {
             output = new File(
                     UserPreferences.getDataFolder(context, EXPORT_DIR),
-                    DEFAULT_OUTPUT_NAME);
+                    context.getString(R.string.opml_default_name));
             if (output.exists()) {
                 Log.w(TAG, "Overwriting previously exported file.");
                 output.delete();

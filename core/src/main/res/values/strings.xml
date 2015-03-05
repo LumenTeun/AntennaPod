@@ -286,13 +286,13 @@
 
     <!-- OPML import and export -->
     <string name="opml_import_txtv_button_lable">OPML files allow you to move your podcasts from one podcatcher to another.</string>
-    <string name="opml_import_explanation">To import an OPML file, you have to place it in the following directory and press the button below to start the import process. </string>
+    <string name="opml_import_explanation">The \'Start import\'-button will import podcasts from the file shown below. If you want to import podcasts from another file, click the text and choose another OPML-file.</string>
     <string name="start_import_label">Start import</string>
     <string name="opml_import_label">OPML import</string>
     <string name="opml_directory_error">ERROR!</string>
     <string name="reading_opml_label">Reading OPML file</string>
     <string name="opml_reader_error">An error has occurred while reading the opml document:</string>
-    <string name="opml_import_error_dir_empty">The import directory is empty.</string>
+    <string name="opml_import_error_no_file">The file doesn\'t exist.</string>
     <string name="select_all_label">Select all</string>
     <string name="deselect_all_label">Deselect all</string>
     <string name="choose_file_to_import_label">Choose file to import</string>
@@ -301,6 +301,7 @@
     <string name="export_error_label">Export error</string>
     <string name="opml_export_success_title">Opml export successful.</string>
     <string name="opml_export_success_sum">The .opml file was written to:\u0020</string>
+    <string name="opml_default_name">antennapod-feeds.opml</string>
 
     <!-- Sleep timer -->
     <string name="set_sleeptimer_label">Set sleep timer</string>

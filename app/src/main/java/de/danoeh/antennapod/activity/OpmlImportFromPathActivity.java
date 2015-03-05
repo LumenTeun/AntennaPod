@@ -1,7 +1,8 @@
 package de.danoeh.antennapod.activity;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -24,6 +25,7 @@ import java.io.*;
  */
 public class OpmlImportFromPathActivity extends OpmlImportBaseActivity {
     private static final String TAG = "OpmlImportFromPathActivity";
+    private static final int CHOOSE_OPML_FILE = 1;
     private TextView txtvPath;
     private Button butStart;
     private String importPath;
@@ -39,10 +41,16 @@ public class OpmlImportFromPathActivity extends OpmlImportBaseActivity {
         txtvPath = (TextView) findViewById(R.id.txtvPath);
         butStart = (Button) findViewById(R.id.butStartImport);
 
+        txtvPath.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                chooseFileToImport();
+            }
+        });
         butStart.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                checkFolderForFiles();
+                startImport();
             }
 
         });
@@ -52,7 +60,9 @@ public class OpmlImportFromPathActivity extends OpmlImportBaseActivity {
     protected void onResume() {
         super.onResume();
         StorageUtils.checkStorageAvailability(this);
-        setImportPath();
+        if (txtvPath.getText().equals("")) {
+            setImportPath();
+        }
     }
 
     /**
@@ -71,8 +81,8 @@ public class OpmlImportFromPathActivity extends OpmlImportBaseActivity {
             }
         }
         if (success) {
-            txtvPath.setText(importDir.toString());
-            importPath = importDir.toString();
+            importPath = importDir.toString() + "/" + getString(R.string.opml_default_name);
+            txtvPath.setText(importPath);
         } else {
             txtvPath.setText(R.string.opml_directory_error);
         }
@@ -95,33 +105,8 @@ public class OpmlImportFromPathActivity extends OpmlImportBaseActivity {
         }
     }
 
-    /**
-     * Looks at the contents of the import directory and decides what to do. If
-     * more than one file is in the directory, a dialog will be created to let
-     * the user choose which item to import
-     */
-    private void checkFolderForFiles() {
-        File dir = new File(importPath);
-        if (dir.isDirectory()) {
-            File[] fileList = dir.listFiles();
-            if (fileList.length == 1) {
-                if (BuildConfig.DEBUG)
-                    Log.d(TAG, "Found one file, choosing that one.");
-                startImport(fileList[0]);
-            } else if (fileList.length > 1) {
-                Log.w(TAG, "Import directory contains more than one file.");
-                askForFile(dir);
-            } else {
-                Log.e(TAG, "Import directory is empty");
-                Toast toast = Toast
-                        .makeText(this, R.string.opml_import_error_dir_empty,
-                                Toast.LENGTH_LONG);
-                toast.show();
-            }
-        }
-    }
-
-    private void startImport(File file) {
+    private void startImport() {
+        File file = new File(importPath);
         Reader mReader = null;
         try {
             mReader = new InputStreamReader(new FileInputStream(file),
@@ -129,43 +114,37 @@ public class OpmlImportFromPathActivity extends OpmlImportBaseActivity {
             if (BuildConfig.DEBUG) Log.d(TAG, "Parsing " + file.toString());
             startImport(mReader);
         } catch (FileNotFoundException e) {
-            Log.d(TAG, "File not found which really should be there");
-            // this should never happen as it is a file we have just chosen
+            Log.e(TAG, "File doesn't exist: " + importPath);
+            Toast.makeText(this, R.string.opml_import_error_no_file, Toast.LENGTH_LONG).show();
         }
     }
 
     /**
-     * Asks the user to choose from a list of files in a directory and returns
-     * his choice.
+     * Creates an implicit intent to launch a file manager which lets
+     * the user choose a specific OPML-file to import from.
      */
-    private void askForFile(File dir) {
-        final File[] fileList = dir.listFiles();
-        String[] fileNames = dir.list();
-
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-        dialog.setTitle(R.string.choose_file_to_import_label);
-        dialog.setNeutralButton(android.R.string.cancel,
-                new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (BuildConfig.DEBUG)
-                            Log.d(TAG, "Dialog was cancelled");
-                        dialog.dismiss();
-                    }
-                });
-        dialog.setItems(fileNames, new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (BuildConfig.DEBUG)
-                    Log.d(TAG, "File at index " + which + " was chosen");
-                dialog.dismiss();
-                startImport(fileList[which]);
-            }
-        });
-        dialog.create().show();
+    private void chooseFileToImport() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setData(Uri.parse("file://"));
+        try {
+            startActivityForResult(intent, CHOOSE_OPML_FILE);
+        } catch (ActivityNotFoundException e) {
+            Log.e(TAG, "No activity found. Trying without URI scheme.");
+            intent.setData(null);
+            startActivityForResult(intent, CHOOSE_OPML_FILE);
+        }
     }
 
+    /**
+     * Gets the path of the file chosen with chooseFileToImport()
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == CHOOSE_OPML_FILE) {
+            importPath = data.getData().getPath();
+            txtvPath.setText(importPath);
+        }
+    }
 
 }
